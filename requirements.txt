@@ -3,3 +3,5 @@ flask-socketio
 requests
 gunicorn
 eventlet
+pymongo
+dnspython
