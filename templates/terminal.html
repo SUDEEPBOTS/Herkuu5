@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Render Logs</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body { background: #000; color: #0f0; font-family: monospace; padding: 20px; }
+        #terminal { height: 90vh; overflow-y: auto; white-space: pre-wrap; font-size: 13px; }
+        .log-line { border-bottom: 1px solid #111; padding: 2px 0; }
+        .timestamp { color: #555; margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <input type="hidden" id="apiKey" value="{{ api_key }}">
+    <input type="hidden" id="srvId" value="{{ service_id }}">
+
+    <div id="terminal">
+        <div>> System Initialized. Connecting to Stream...</div>
+    </div>
+
+    <script>
+        const socket = io();
+        
+        // Auto Connect on Load
+        window.onload = function() {
+            connect();
+        };
+
+        socket.on('new_log', function(data) {
+            const term = document.getElementById('terminal');
+            const div = document.createElement('div');
+            div.className = 'log-line';
+            div.innerHTML = `<span class="timestamp">[${new Date(data.time).toLocaleTimeString()}]</span> ${data.message}`;
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
+        });
+
+        async function connect() {
+            const api = document.getElementById('apiKey').value;
+            const srv = document.getElementById('srvId').value;
+
+            const res = await fetch('/start_stream', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ api: api, srv: srv })
+            });
+
+            const data = await res.json();
+            if (data.status === 'connected') {
+                document.getElementById('terminal').innerHTML += "<div>> SUCCESS: Secure Connection Established!</div>";
+            } else {
+                document.getElementById('terminal').innerHTML += `<div style="color:red">> ERROR: ${data.error}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
